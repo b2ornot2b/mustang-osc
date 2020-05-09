@@ -7,18 +7,20 @@ import "github.com/google/gousb"
 
 const ModelPosition = 16
 
+type Controller interface{}
+
 type Mustang struct {
 	epIn      *gousb.InEndpoint
 	epOut     *gousb.OutEndpoint
-	jsChannel []chan string
-	Channel   []chan string
+	jsChannel []chan Message
+	Channel   []chan Message
 }
 
-func (m *Mustang) GetJsonChannels() (rx chan string, tx chan string) {
+func (m *Mustang) GetChannels() (rx chan Message, tx chan Message) {
 	if m.jsChannel == nil {
-		m.jsChannel = make([]chan string, 2)
-		m.jsChannel[0] = make(chan string)
-		m.jsChannel[1] = make(chan string)
+		m.jsChannel = make([]chan Message, 2)
+		m.jsChannel[0] = make(chan Message)
+		m.jsChannel[1] = make(chan Message)
 
 		go m.senderLoop(m.jsChannel[1])
 	}
@@ -29,7 +31,7 @@ func (m *Mustang) Connect() {
 	m.usbConnect()
 }
 
-func (m *Mustang) senderLoop(tx chan string) {
+func (m *Mustang) senderLoop(tx chan Message) {
 	for {
 		msg := <-tx
 		log.Warn("Received: ", msg)
@@ -74,7 +76,8 @@ func (m *Mustang) usbReaderLoop() {
 			continue
 		}
 
-		fmt.Printf("msg %t = %v\n", msg, msg)
+		//fmt.Printf("msg %t = %v\n", msg, msg)
+		m.jsChannel[0] <- msg
 	}
 }
 
