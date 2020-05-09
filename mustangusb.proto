@@ -1,0 +1,46 @@
+syntax = "proto3";
+package mustang;
+// option go_package = "github.com/b2ornot2b/gomustang/mustang";
+
+import "google/protobuf/timestamp.proto";
+
+message Version {
+  string Version = 1;
+}
+
+message ParameterChange {
+  uint32 Dsp = 1;
+  uint32 Effect = 2;
+  uint32 Control = 3;
+  uint32 Value = 4;
+}
+
+message PatchnameChange {
+    uint32 Category = 1;
+    uint32 Idx = 2;
+    string Name = 3;
+}
+
+message Parameter {
+    string Name = 1;
+    uint32 Control = 2;
+    uint32 Value = 3;
+}
+ 
+message EffectChange {
+    string Effect = 1;
+    string Name = 2;
+    uint32 Model = 3;
+    bool Enabled = 4;
+    repeated Parameter Params = 5;
+}
+
+message PatchChange {
+    uint32 Idx = 1;
+}
+
+message UpdateAmp {
+    oneof updateType {
+        PatchChange patchChange = 1;
+    }
+}
