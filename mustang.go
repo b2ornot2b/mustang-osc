@@ -3,16 +3,7 @@ package mustang
 import "fmt"
 import log "github.com/Sirupsen/logrus"
 
-/*import "sort"
-import "bytes"
-import "errors"
-
-import "encoding/binary"
-import "google.golang.org/protobuf/reflect/protoreflect"
-*/
 import "github.com/google/gousb"
-import "google.golang.org/protobuf/encoding/protojson"
-import "google.golang.org/protobuf/reflect/protoreflect"
 
 const ModelPosition = 16
 
@@ -42,12 +33,14 @@ func (m *Mustang) senderLoop(tx chan string) {
 	for {
 		msg := <-tx
 		log.Warn("Received: ", msg)
-		m := &UpdateAmp{}
-		err := protojson.Unmarshal([]byte(msg), m)
-		if err != nil {
-			log.Error("Invalid JSON", err)
-			continue
-		}
+		/*
+			m := &UpdateAmp{}
+			err := protojson.Unmarshal([]byte(msg), m)
+			if err != nil {
+				log.Error("Invalid JSON", err)
+				continue
+			}
+		*/
 
 	}
 }
@@ -81,48 +74,10 @@ func (m *Mustang) usbReaderLoop() {
 			continue
 		}
 
-		r := msg.ProtoReflect()
-		m.toOsc(r, "/")
-
-		if m.jsChannel != nil {
-			marshal := protojson.MarshalOptions{EmitUnpopulated: true}
-			json, err := marshal.Marshal(msg)
-			if err != nil {
-				continue
-			}
-			jsonStr := string(json[:])
-			// log.Printf("msg %T: %s\n", msg, jsonStr)
-			m.jsChannel[0] <- jsonStr
-		}
+		fmt.Printf("msg %t = %v\n", msg, msg)
 	}
 }
 
-func (m *Mustang) toOsc(r protoreflect.Message, keyPrefix string) {
-	log.Info("toOsc")
-	r.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
-		path := keyPrefix + fd.JSONName()
-		switch fd.Kind() {
-		case protoreflect.StringKind:
-			fmt.Printf("Key=%v Value=%v\n", path, v.String())
-		case protoreflect.BoolKind:
-			fmt.Printf("Key=%v Value=%v\n", path, v.Bool())
-		case protoreflect.Uint32Kind:
-			fmt.Printf("Key=%v Value=%v\n", path, v.Uint())
-		case protoreflect.MessageKind:
-			if fd.IsList() {
-				l := v.List()
-				for i := 0; i < l.Len(); i++ {
-					m.toOsc(l.Get(i).Message(), path+"/")
-					//m.toOsc(v.List())
-				}
-			}
-
-		default:
-			fmt.Printf("Key=%v Kind=%d Values=LIST", fd.JSONName(), fd.Kind())
-		}
-		return true
-	})
-}
 func (m *Mustang) displayBuf(buf []byte, readBytes int) {
 	for i := 0; i < readBytes; i++ {
 		fmt.Printf("\t%d: %02x %q", i, buf[i], buf[i])

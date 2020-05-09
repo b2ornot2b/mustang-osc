@@ -7,16 +7,42 @@ import "bytes"
 import "errors"
 
 import "encoding/binary"
-import "google.golang.org/protobuf/reflect/protoreflect"
-
-//go:generate protoc --go_out=. mustangusb.proto
 
 type MustangUsbProtocolParser struct {
 	buf []byte
 }
 
-type Message interface {
-	ProtoReflect() protoreflect.Message
+type Message interface{}
+
+type Version struct {
+	Version string
+}
+
+type ParameterChange struct {
+	Dsp     uint32
+	Effect  uint32
+	Control uint32
+	Value   uint32
+}
+
+type PatchnameChange struct {
+	Category uint32
+	Idx      uint32
+	Name     string
+}
+
+type Parameter struct {
+	Name    string
+	Control uint32
+	Value   uint32
+}
+
+type EffectChange struct {
+	Effect  string
+	Name    string
+	Model   uint32
+	Enabled bool
+	Params  []*Parameter
 }
 
 type paramNamesMap map[uint16](map[uint8]string)
