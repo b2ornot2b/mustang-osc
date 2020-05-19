@@ -103,7 +103,6 @@ func (m *Mustang) usbReaderLoop() {
 }
 
 func (m *Mustang) displayBuf(buf []byte, readBytes int) {
-	return
 	fmt.Printf("buf := []byte { ")
 	for i := 0; i < readBytes; i++ {
 		if true {

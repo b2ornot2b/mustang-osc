@@ -57,14 +57,15 @@ func (o *OSC) setupFxHandlers(d *osc.StandardDispatcher, tx chan Message) {
 				}
 				log.Info(">> ", path)
 				handled[path] = true
+				_dsp := dsp
 				d.AddMsgHandler(path, func(msg *osc.Message) {
 					osc.PrintMessage(msg)
 					if len(msg.Arguments) > 0 {
 						value := uint32(msg.Arguments[0].(float32))
 						tx <- &ParameterChange{
-							Category: category,
-							Control:  controlName,
-							Value:    value,
+							Dsp:     _dsp,
+							Control: controlName,
+							Value:   value,
 						}
 					}
 				})
