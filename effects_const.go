@@ -1,6 +1,6 @@
 package mustang
 
-var ampIds = map[uint16]string{
+var ampIds = map[FxModel]string{
 	0x0000: "None",
 	0x0067: "Fender '57 Deluxe",
 	0x0064: "Fender '59 Bassman",
@@ -21,7 +21,7 @@ var ampIds = map[uint16]string{
 	0x00fc: "British Colour",
 }
 
-var ampParamNames = map[uint8]string{
+var ampDefaultParamNames = map[ParameterIdx]string{
 	0:  "Volume",
 	1:  "Gain",
 	2:  "Blend",
@@ -38,7 +38,29 @@ var ampParamNames = map[uint8]string{
 	19: "Sag",
 }
 
-var stompboxIds = map[uint16]string{
+var ampParamNames = map[FxModel](map[ParameterIdx]string){
+	0x0000: {},
+	0x004c: ampDefaultParamNames,
+	0x0067: ampDefaultParamNames,
+	0x0064: ampDefaultParamNames,
+	0x007c: ampDefaultParamNames,
+	0x0053: ampDefaultParamNames,
+	0x006a: ampDefaultParamNames,
+	0x0075: ampDefaultParamNames,
+	0x0072: ampDefaultParamNames,
+	0x0061: ampDefaultParamNames,
+	0x0079: ampDefaultParamNames,
+	0x005e: ampDefaultParamNames,
+	0x005d: ampDefaultParamNames,
+	0x006d: ampDefaultParamNames,
+	0x00f1: ampDefaultParamNames,
+	0x00f6: ampDefaultParamNames,
+	0x00f9: ampDefaultParamNames,
+	0x00ff: ampDefaultParamNames,
+	0x00fc: ampDefaultParamNames,
+}
+
+var stompboxIds = map[FxModel]string{
 	0x0000: "None",
 	0x003c: "Overdrive",
 	0x0049: "Wah",
@@ -53,7 +75,7 @@ var stompboxIds = map[uint16]string{
 	0x0111: "Black Box",
 	0x010f: "Big Fuzz",
 }
-var stompboxParamNames = map[uint16](map[uint8]string){
+var stompboxParamNames = map[FxModel](map[ParameterIdx]string){
 	0x0000: {},
 	0x003c: {
 		0: "Level",
@@ -129,7 +151,7 @@ var stompboxParamNames = map[uint16](map[uint8]string){
 	},
 }
 
-var modulationIds = map[uint16]string{
+var modulationIds = map[FxModel]string{
 	0x0000: "None",
 	0x0012: "Sine Chorus",
 	0x0013: "Triangle Chorus",
@@ -147,7 +169,7 @@ var modulationIds = map[uint16]string{
 	0x011f: "Diatonic Pitch Shifter",
 }
 
-var modulationParamNames = map[uint16](map[uint8]string){
+var modulationParamNames = map[FxModel](map[ParameterIdx]string){
 	0x0000: {},
 	0x0012: {
 		0: "Level",
@@ -249,7 +271,7 @@ var modulationParamNames = map[uint16](map[uint8]string){
 	},
 }
 
-var delayIds = map[uint16]string{
+var delayIds = map[FxModel]string{
 	0x0000: "None",
 	0x0016: "Mono Delay",
 	0x0043: "Mono Echo Filter",
@@ -262,7 +284,7 @@ var delayIds = map[uint16]string{
 	0x002a: "Stereo Tape Delay",
 }
 
-var delayParamNames = map[uint16](map[uint8]string){
+var delayParamNames = map[FxModel](map[ParameterIdx]string){
 	0x0000: {},
 	0x0016: {
 		0: "Level",
@@ -333,7 +355,7 @@ var delayParamNames = map[uint16](map[uint8]string){
 	},
 }
 
-var reverbIds = map[uint16]string{
+var reverbIds = map[FxModel]string{
 	0x0000: "None",
 	0x004c: "Ambient",
 	0x004d: "Arena",
@@ -347,7 +369,7 @@ var reverbIds = map[uint16]string{
 	0x0024: "Small Hall",
 }
 
-var reverbParams = map[uint8]string{
+var reverbDefaultParamNames = map[ParameterIdx]string{
 	0: "Level",
 	1: "Decay",
 	2: "Dwell",
@@ -355,16 +377,40 @@ var reverbParams = map[uint8]string{
 	4: "Tone",
 }
 
-var reverbParamNames = map[uint16](map[uint8]string){
+var reverbParamNames = map[FxModel](map[ParameterIdx]string){
 	0x0000: {},
-	0x004c: reverbParams,
-	0x004d: reverbParams,
-	0x0021: reverbParams,
-	0x000b: reverbParams,
-	0x004b: reverbParams,
-	0x004e: reverbParams,
-	0x003b: reverbParams,
-	0x0026: reverbParams,
-	0x003a: reverbParams,
-	0x0024: reverbParams,
+	0x004c: reverbDefaultParamNames,
+	0x004d: reverbDefaultParamNames,
+	0x0021: reverbDefaultParamNames,
+	0x000b: reverbDefaultParamNames,
+	0x004b: reverbDefaultParamNames,
+	0x004e: reverbDefaultParamNames,
+	0x003b: reverbDefaultParamNames,
+	0x0026: reverbDefaultParamNames,
+	0x003a: reverbDefaultParamNames,
+	0x0024: reverbDefaultParamNames,
+}
+
+var fxParamNames = map[DspType](map[FxModel](map[ParameterIdx]string)){
+	0x05: ampParamNames,
+	0x06: stompboxParamNames,
+	0x07: modulationParamNames,
+	0x08: delayParamNames,
+	0x09: reverbParamNames,
+}
+
+var fxCategory = map[DspType]string{
+	0x05: "Amp",
+	0x06: "Stompbox",
+	0x07: "Modulation",
+	0x08: "Delay",
+	0x09: "Reverb",
+}
+
+var fxNames = map[DspType](map[FxModel]string){
+	0x05: ampIds,
+	0x06: stompboxIds,
+	0x07: modulationIds,
+	0x08: delayIds,
+	0x09: reverbIds,
 }

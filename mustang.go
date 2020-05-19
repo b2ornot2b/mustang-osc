@@ -1,6 +1,9 @@
 package mustang
 
 import "fmt"
+import "time"
+import "errors"
+import "encoding/binary"
 import log "github.com/Sirupsen/logrus"
 
 import "github.com/google/gousb"
@@ -10,40 +13,55 @@ const ModelPosition = 16
 type Controller interface{}
 
 type Mustang struct {
-	epIn      *gousb.InEndpoint
-	epOut     *gousb.OutEndpoint
-	jsChannel []chan Message
-	Channel   []chan Message
+	epIn    *gousb.InEndpoint
+	epOut   *gousb.OutEndpoint
+	channel []chan Message
+
+	CurrentEffect map[DspType]EffectChange
 }
 
 func (m *Mustang) GetChannels() (rx chan Message, tx chan Message) {
-	if m.jsChannel == nil {
-		m.jsChannel = make([]chan Message, 2)
-		m.jsChannel[0] = make(chan Message)
-		m.jsChannel[1] = make(chan Message)
+	if m.channel == nil {
+		m.channel = make([]chan Message, 2)
+		m.channel[0] = make(chan Message)
+		m.channel[1] = make(chan Message)
 
-		go m.senderLoop(m.jsChannel[1])
+		go m.senderLoop(m.channel[1])
 	}
-	return m.jsChannel[0], m.jsChannel[1]
+	return m.channel[0], m.channel[1]
 }
 
 func (m *Mustang) Connect() {
+	m.CurrentEffect = make(map[DspType]EffectChange)
+
 	m.usbConnect()
+}
+
+func (m *Mustang) SendPatchname(name string) {
+	log.Info("SendPatchname", name)
+
+}
+
+func (m *Mustang) GetControlIdx(dsp DspType, model FxModel, control string) ([]byte, error) {
+
+	params := fxParamNames[dsp][model]
+
+	for ctrlId, ctrlName := range params {
+		if ctrlName == control {
+			b := make([]byte, 2)
+			binary.LittleEndian.PutUint16(b, uint16(ctrlId))
+			return b, nil
+		}
+	}
+	return nil, errors.New("control not found")
 }
 
 func (m *Mustang) senderLoop(tx chan Message) {
 	for {
 		msg := <-tx
-		log.Warn("Received: ", msg)
-		/*
-			m := &UpdateAmp{}
-			err := protojson.Unmarshal([]byte(msg), m)
-			if err != nil {
-				log.Error("Invalid JSON", err)
-				continue
-			}
-		*/
-
+		log.Debug("usb tx: ", msg)
+		msg.Send(m)
+		time.Sleep(3 * time.Millisecond)
 	}
 }
 
@@ -62,46 +80,58 @@ func (m *Mustang) usbReaderLoop() {
 			return
 		}
 
-		p := MustangUsbProtocolParser{}
-		// m.displayBuf(buf, readBytes)
+		p := MustangUsbProtocolParser{mustang: m}
+		m.displayBuf(buf, readBytes)
 		msg, err := p.parse(buf)
 		if err != nil {
 			log.Warn("Unhandled message...")
-			m.displayBuf(buf, readBytes)
+			//m.displayBuf(buf, readBytes)
 			continue
 		}
 
 		if msg == nil {
 			log.Debug("Silently dropping message...")
+			//m.displayBuf(buf, readBytes)
 			continue
 		}
 
+		//log.Debug("Dsp: ", msg.Dsp)
+
 		//fmt.Printf("msg %t = %v\n", msg, msg)
-		m.jsChannel[0] <- msg
+		m.channel[0] <- msg
 	}
 }
 
 func (m *Mustang) displayBuf(buf []byte, readBytes int) {
+	return
+	fmt.Printf("buf := []byte { ")
 	for i := 0; i < readBytes; i++ {
-		fmt.Printf("\t%d: %02x %q", i, buf[i], buf[i])
-		if 0 == ((i + 1) % 8) {
-			fmt.Println()
+		if true {
+			fmt.Printf("\t%d: %02x %q", i, buf[i], buf[i])
+			if 0 == ((i + 1) % 8) {
+				fmt.Println()
+			}
+		} else {
+			fmt.Printf("0x%02x, ", buf[i])
 		}
 	}
+	fmt.Printf("}\n")
 }
 
 func (m *Mustang) usbInit() {
 	buf := make([]byte, m.epOut.Desc.MaxPacketSize)
 	buf[1] = 0xc3
-	m.usbSend(buf)
+	m.UsbSend(buf)
 
 	buf[0] = 0x1a
 	buf[1] = 0xc1
-	m.usbSend(buf)
+	m.UsbSend(buf)
 }
 
-func (m *Mustang) usbSend(buf []byte) {
+func (m *Mustang) UsbSend(buf []byte) {
 	epOut := m.epOut
+	fmt.Println("UsbSend")
+	m.displayBuf(buf, len(buf))
 	for retries := 0; retries < 64; retries++ {
 		writeBytes, err := epOut.Write(buf)
 		if err != nil {
